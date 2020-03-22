@@ -2,7 +2,7 @@
 	Monitors Phase inputs and determines current track
 	Modern OS, shared memory
 
-	Inputs:	
+	Inputs:
 		P0		P9_31	R31_0
 		P1		P9_29	R31_1
 		P2		P9_30	R31_2
@@ -15,7 +15,7 @@
 	Memory Locations shared with Controller:
 		Track number	0x300
 
-	03/19/2020
+	03/22/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -47,9 +47,11 @@ int main(int argc, char *argv[])
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 
 	lastPhaseIn = 0x1F;				// to force a "new" phase report
-	track = 0;
+	track = 12;
 	phaseTrk = 0;
 	cogLocation = 0;
+
+	PRU0_RAM[TRK_NUM_ADR] = track;
 
 	while (1)
 	{
@@ -69,11 +71,11 @@ int main(int argc, char *argv[])
 			if (lastPhaseIn != newPhase1)	// any change?
 			{
 				lastPhaseIn = newPhase1;
-				
+
 				cogLocation = 1 << (phaseTrk % 4);
 
 				if (newPhase1 && !(cogLocation & newPhase1))
-				{	
+				{
 					if (((cogLocation << 1) & newPhase1) || ((cogLocation >> 3) & newPhase1))
 					{
 						if (phaseTrk < 69)

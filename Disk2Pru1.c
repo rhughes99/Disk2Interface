@@ -65,7 +65,7 @@ uint32_t RDAT, TEST1, TEST2;		// outputs
 
 void SendSector(unsigned char sector);
 void HandleWrite(void);
-void InsertBit(signed char bit)
+void InsertBit(signed char bit);
 
 //____________________
 int main(int argc, char *argv[])
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		if ((__R31 & EN) == 0)				// A2 enables us
+		if ((__R31 & ENABLE) == 0)			// A2 enables us
 		{
 			PRU1_RAM[ENABLE_ADR] = 0;		// EN- = 0
 
@@ -98,17 +98,17 @@ int main(int argc, char *argv[])
 			{
 				PRU1_RAM[SECTOR_ADR] = sector;		// tell Controller we are about to send
 													//  this sector
-				if (PRU1_RAM[CONT_INT_ADR] == 1)	// Controller enables us
+				if (PRU1_RAM[CONT_INT_ADR] == 0)	// Controller enables us
 				{
 					__delay_cycles(2000);			// 10.0 us ???
 					SendSector(sector);
 				}
 
 				else
-					while (PRU1_RAM[CONT_INT_ADR] == 0)	// wait here till Controller says go
+					while (PRU1_RAM[CONT_INT_ADR] == 1)	// wait here till Controller says go
 						__delay_cycles(200);			// 1.0 us ???
 			}
-		
+
 		}
 		else
 		{
@@ -149,7 +149,7 @@ void SendSector(unsigned char sector)
 
 		if (bitMask == 1)				// we just sent lsb so time for next byte
 		{
-			memPtr++;
+			sectorAdr++;
 			bitMask = 0x80;
 		}
 		else
@@ -174,7 +174,7 @@ void HandleWrite(void)
 	{
 		count = 0;
 		lastWSIG = __R31 & WSIG;
-		while ((__R31 & WSIG) == lastWDAT)
+		while ((__R31 & WSIG) == lastWSIG)
 		{
 			count++;
 			if (count > 65)	// was 64

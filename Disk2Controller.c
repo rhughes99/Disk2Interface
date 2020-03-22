@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <sys/mman.h>
 
-#define VERBOSE		1									// 1 = display track number
+#define VERBOSE	1								// 1 = display track number
 
 void myShutdown(int sig);
 void changeImage(int sig);
@@ -62,7 +62,7 @@ static unsigned char *pru1InterruptPtr;		// set by Controller, 1 = stop sending 
 static unsigned char *pru1WriteDataPtr;		// first byte of data written by A2
 
 static unsigned char running;							// to allow graceful quit
-unsigned char track = 0;								// starting point
+unsigned char track = 100;								// starting point ???
 unsigned char loadedTrk = 0;
 
 const unsigned int NUM_TRACKS = 35;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
 	pru1EnPtr			= pru1RAMptr + ENABLE_ADR;
 	pru1SectorPtr		= pru1RAMptr + SECTOR_ADR;
 	pru1WritePtr		= pru1RAMptr + WRITE_ADR;
-	pru1WriteCntPtr		= pru1RAMptr + WRITE_CNT_ADR;
+	pru1WriteCntPtr		= (int *)(pru1RAMptr + WRITE_CNT_ADR);
 	pru1InterruptPtr	= pru1RAMptr + CONT_INT_ADR;
 	pru1WriteDataPtr	= pru1RAMptr + WRITE_DATA_ADR;
 
@@ -215,7 +215,7 @@ int main(int argc, char *argv[])
 	printf("\t<ctrl>-z to change image or save\n");
 	printf("\t<ctrl>-c to quit\n");
 	printf("--------------------\n");
-	
+
 	running = 1;
 	trkCnt = 0;
 	prevSector = 0;
@@ -226,6 +226,8 @@ int main(int argc, char *argv[])
 		track = *pru0TrackPtr;
 		if (track != loadedTrk)						// has A2 moved disk head?
 		{
+			printf("NEW TRACK\n");
+
 			*pru1InterruptPtr = 1;					// pause PRU1 while changing track
 			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
 			trkCnt++;
@@ -254,7 +256,10 @@ int main(int argc, char *argv[])
 			if (*pru1SectorPtr != prevSector)	// sector has changed
 			{
 				// PRU 1 ready to send next sector
-				if (*pru1WritePtr == 1)		// did write occur during sector
+				prevSector = *pru1SectorPtr;
+
+				// But first, did a write occur during the last sector?
+				if (*pru1WritePtr == 1)
 				{
 					// a write occurred during this sector
 					// PRU put write data in ram startng at 0x1800 (6144)
@@ -275,16 +280,16 @@ int main(int argc, char *argv[])
 						writeByte = *(pru1WriteDataPtr + i);
 						theImage[loadedTrk][sector][j] = writeByte;
 						*(pru1TrackDataPtr + sectorIndex + j) = writeByte;
-						
+
 						checksum ^= writeByte;
 					}
 					usleep(30000);
 				}
 
 				// enable sector
-				*pru1InterruptPtr = 1;					// enable next sector
+				*pru1InterruptPtr = 0;					// enable next sector
 				usleep(1);								// short sleep to let PRU continue
-				*pru1InterruptPtr = 0;					// PRU 1 stops before sending next sector
+				*pru1InterruptPtr = 1;					// PRU 1 stops before sending next sector
 			}
 		}
 	} while (running);
@@ -455,7 +460,7 @@ void loadDiskImage(const char *imageName)
 	}
 
 	// Load track 0 into PRU1 data ram
-	*pru1InterruptPtr = 0;					// pause PRU1 while changing track
+	*pru1InterruptPtr = 1;					// pause PRU1 while changing track
 
 	for (sector=0; sector<NUM_SECTORS_PER_TRACK; sector++)
 	{
@@ -463,7 +468,7 @@ void loadDiskImage(const char *imageName)
 		for (i=0; i<SMALL_NIBBLE_SIZE; i++)
 			*(pru1TrackDataPtr + offset + i) = theImage[0][sector][i];
 	}
-	*pru1InterruptPtr = 1;
+	*pru1InterruptPtr = 0;
 
 	track = 0;
 	loadedTrk = 0;
@@ -575,7 +580,7 @@ void saveDiskImage(const char *fileName)
 	char imagePath[64];
 	unsigned int i;
 	char *ext;
-	FILE *fd;	
+	FILE *fd;
 
 	// Set up unTranslateSector tables
 	for (i=0; i<16; i++)
