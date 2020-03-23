@@ -15,7 +15,7 @@
 	Memory Locations shared with Controller:
 		Track number	0x300
 
-	03/22/2020
+	03/23/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -33,7 +33,8 @@ volatile register uint32_t __R31;
 //____________________
 int main(int argc, char *argv[])
 {
-	unsigned char lastPhaseIn, newPhase1, newPhase2, track, phaseTrk, cogLocation;
+	unsigned char lastPhaseIn, newPhase1, newPhase2;
+	unsigned char track, phaseTrk, cogLocation;
 	uint32_t PHASE0, PHASE1, PHASE2, PHASE3, ENABLE;	// inputs
 
 	// Set I/O constants
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 
 	lastPhaseIn = 0x1F;				// to force a "new" phase report
-	track = 12;
+	track = 3;
 	phaseTrk = 0;
 	cogLocation = 0;
 
@@ -55,44 +56,46 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-		while ((__R31 & ENABLE) == ENABLE)	// wait for Enable to go low
-			__delay_cycles(200000);			// 1 ms
+//		while ((__R31 & ENABLE) == ENABLE)	// wait for Enable to go low
+//			__delay_cycles(200000);			// 1 ms
 
-		// Drive is enabled
-		newPhase1 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);	// sample phase inputs
-
-		// Wait and then sample again; avoid reacting to short glitches on P0
-		__delay_cycles(200000);				// 1 ms
-
-		newPhase2 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);
-
-		if (newPhase1 == newPhase2)			// consider phase valid
+		if ((__R31 & ENABLE) == 0)					// drive is enabled
 		{
-			if (lastPhaseIn != newPhase1)	// any change?
+			newPhase1 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);	// sample phase inputs
+
+			// Wait and then sample again to avoid reacting to short glitches on P0
+			__delay_cycles(200000);				// 1 ms
+
+			newPhase2 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);
+
+			if (newPhase1 == newPhase2)			// consider phase valid
 			{
-				lastPhaseIn = newPhase1;
-
-				cogLocation = 1 << (phaseTrk % 4);
-
-				if (newPhase1 && !(cogLocation & newPhase1))
+				if (lastPhaseIn != newPhase1)	// any change?
 				{
-					if (((cogLocation << 1) & newPhase1) || ((cogLocation >> 3) & newPhase1))
-					{
-						if (phaseTrk < 69)
-							phaseTrk++;
-					}
-					else if (((cogLocation >> 1) & newPhase1) || ((cogLocation << 3) & newPhase1))
-					{
-						if (phaseTrk > 0)
-							phaseTrk--;
-					}
+					lastPhaseIn = newPhase1;	//update lastPhaseIn
 
-					if (track != (phaseTrk>>1))
-						track = phaseTrk >> 1;
+					cogLocation = 1 << (phaseTrk % 4);
+
+					if (newPhase1 && !(cogLocation & newPhase1))
+					{
+						if (((cogLocation << 1) & newPhase1) || ((cogLocation >> 3) & newPhase1))
+						{
+							if (phaseTrk < 69)
+								phaseTrk++;
+						}
+						else if (((cogLocation >> 1) & newPhase1) || ((cogLocation << 3) & newPhase1))
+						{
+							if (phaseTrk > 0)
+								phaseTrk--;
+						}
+
+						if (track != (phaseTrk>>1))
+							track = phaseTrk >> 1;
+					}
+					PRU0_RAM[TRK_NUM_ADR] = track;		// update track for Controller
 				}
-
-				PRU0_RAM[TRK_NUM_ADR] = track;		// update track for Controller
 			}
 		}
+		__delay_cycles(200000);			// 1 ms
 	}
 }

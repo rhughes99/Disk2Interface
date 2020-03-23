@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/22/2020
+	03/23/2020
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <sys/mman.h>
 
-#define VERBOSE	1								// 1 = display track number
+#define VERBOSE	1							// 1 = display track number
 
 void myShutdown(int sig);
 void changeImage(int sig);
@@ -62,7 +62,7 @@ static unsigned char *pru1InterruptPtr;		// set by Controller, 1 = stop sending 
 static unsigned char *pru1WriteDataPtr;		// first byte of data written by A2
 
 static unsigned char running;							// to allow graceful quit
-unsigned char track = 100;								// starting point ???
+unsigned char track = 0;
 unsigned char loadedTrk = 0;
 
 const unsigned int NUM_TRACKS = 35;
@@ -223,14 +223,13 @@ int main(int argc, char *argv[])
 	{
 		usleep(10);
 
+		// OK because PRU0 only updates track when drive enabled
 		track = *pru0TrackPtr;
 		if (track != loadedTrk)						// has A2 moved disk head?
 		{
-			printf("NEW TRACK\n");
-
 			*pru1InterruptPtr = 1;					// pause PRU1 while changing track
 			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
-			trkCnt++;
+			trkCnt++;								// for display
 
 			// Copy new track to PRU
 			for (sector=0; sector<NUM_SECTORS_PER_TRACK; sector++)

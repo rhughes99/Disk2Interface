@@ -22,17 +22,16 @@
 
 		PRU -> Controller
 		0x1B00 = EN-
-		0X1B01 = sending sector (0), done senting (1)
-		0x1B02 = current sector number
-		0x1B03 = no write (0), write occurred (1)
-		0x1B04 - 0x1B07 = number of write bytes
+		0x1B01 = current sector number
+		0x1B02 = no write (0), write occurred (1)
+		0x1B03 - 0x1B07 = number of write bytes
 
 		Controller -> PRU
-		0x1B08 = stop sending data to A2 (1)
+		0x1B07 = stop sending data to A2 (1)
 
 		Write data start	0x1C00
 
-	03/22/2020
+	03/23/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -51,7 +50,7 @@ volatile unsigned char *PRU1_RAM = (unsigned char *) PRU0_DRAM;
 #define WRITE_CNT_ADR		0x1B03		// num write bytes, int
 #define CONT_INT_ADR		0x1B07		// Controller interrupt, 1 = stop
 
-#define WRITE_DATA_ADR		0x1900		// address of first write byte
+#define WRITE_DATA_ADR		0x1C00		// address of first write byte
 
 #define NUM_SECTORS_TRACK	16			// sectors per track
 #define NUM_BYTES_SECTOR	0x0176		// 374, includes sync, prologue, data, everything
@@ -100,8 +99,12 @@ int main(int argc, char *argv[])
 													//  this sector
 				if (PRU1_RAM[CONT_INT_ADR] == 0)	// Controller enables us
 				{
+					__R30 |= TEST1;			// TEST1 = 1
+
 					__delay_cycles(2000);			// 10.0 us ???
 					SendSector(sector);
+
+					__R30 &= ~TEST1;		// TEST1 = 0
 				}
 
 				else
@@ -113,7 +116,7 @@ int main(int argc, char *argv[])
 		else
 		{
 			PRU1_RAM[ENABLE_ADR] = 1;		// EN- = 1
-			PRU1_RAM[SECTOR_ADR] = 0xFF;	// invalid sector to force Controller to act
+//			PRU1_RAM[SECTOR_ADR] = 0xFF;	// invalid sector to force Controller to act
 
 			__delay_cycles(200000);			// 1.0 ms
 		}
