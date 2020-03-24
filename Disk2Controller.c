@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/23/2020
+	03/24/2020
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +55,7 @@ static unsigned char *pru0TrackPtr;			// track number commanded by A2
 static unsigned char *pru1RAMptr;			// start of PRU1 memory
 static unsigned char *pru1TrackDataPtr;		// Controller puts loaded track data (starting) here
 static unsigned char *pru1EnPtr;			// EN-
-static unsigned char *pru1SectorPtr;		// current sector or 0xFF
+static unsigned char *pru1SectorPtr;		// last sector sent to A2
 static unsigned char *pru1WritePtr;			// 1 = write occurred
 static unsigned int  *pru1WriteCntPtr;		// num bytes written by A2
 static unsigned char *pru1InterruptPtr;		// set by Controller, 1 = stop sending to A2
@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
 		track = *pru0TrackPtr;
 		if (track != loadedTrk)						// has A2 moved disk head?
 		{
-			*pru1InterruptPtr = 1;					// pause PRU1 while changing track
+			*pru1InterruptPtr = 1;					// pause sending while changing track
 			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
 			trkCnt++;								// for display
 
@@ -238,26 +238,28 @@ int main(int argc, char *argv[])
 				for (i=0; i<SMALL_NIBBLE_SIZE; i++)
 					*(pru1TrackDataPtr + offset + i) = theImage[track][sector][i];
 			}
-			*pru1InterruptPtr = 0;					// turn PRU1 back on
+			*pru1InterruptPtr = 0;					// turn sending back on
 
 			loadedTrk = track;
 			if (VERBOSE)
 			{
-				printf("0x%X\t", loadedTrk);
-				if (trkCnt % 8 == 0)
-					printf("\n");
+				printf("loadedTrk= %d\n", loadedTrk);
+//				printf("0x%X\t", loadedTrk);
+//				if (trkCnt % 8 == 0)
+//					printf("\n");
 			}
 		}
 
 		if (*pru1EnPtr == 0)					// is drive enabled?
 		{
-			// A2 has enabled drive, EN- = 0
-			if (*pru1SectorPtr != prevSector)	// sector has changed
-			{
-				// PRU 1 ready to send next sector
-				prevSector = *pru1SectorPtr;
+			lastSectorSent = *pru1SectorPtr;
 
-				// But first, did a write occur during the last sector?
+			// A2 has enabled drive, EN- = 0
+			if (lastSectorSent != prevSector)	// sector has changed
+			{
+				prevSector = lastSectorSent;
+
+				// But first, did a write occur during last sector?
 				if (*pru1WritePtr == 1)
 				{
 					// a write occurred during this sector
@@ -287,7 +289,7 @@ int main(int argc, char *argv[])
 
 				// enable sector
 				*pru1InterruptPtr = 0;					// enable next sector
-				usleep(1);								// short sleep to let PRU continue
+				usleep(10);								// short sleep to let PRU continue
 				*pru1InterruptPtr = 1;					// PRU 1 stops before sending next sector
 			}
 		}

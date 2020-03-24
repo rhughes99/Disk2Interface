@@ -31,7 +31,7 @@
 
 		Write data start	0x1C00
 
-	03/23/2020
+	03/24/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -95,14 +95,14 @@ int main(int argc, char *argv[])
 
 			for (sector=0; sector<NUM_SECTORS_TRACK; sector++)
 			{
-				PRU1_RAM[SECTOR_ADR] = sector;		// tell Controller we are about to send
-													//  this sector
 				if (PRU1_RAM[CONT_INT_ADR] == 0)	// Controller enables us
 				{
 					__R30 |= TEST1;			// TEST1 = 1
 
 					__delay_cycles(2000);			// 10.0 us ???
 					SendSector(sector);
+
+					PRU1_RAM[SECTOR_ADR] = sector;	// tell Controller this sector sent
 
 					__R30 &= ~TEST1;		// TEST1 = 0
 				}
