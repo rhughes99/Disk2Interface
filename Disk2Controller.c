@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/24/2020
+	03/27/2020
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <sys/mman.h>
 
-#define VERBOSE	1							// 1 = display track number
+#define VERBOSE	0							// 1 = display track number
 
 void myShutdown(int sig);
 void changeImage(int sig);
@@ -97,12 +97,12 @@ const char *utilityImages[] = 		// imageDir 1
 	"Diagnostics_IIe.dsk",
 //	"GPLE.dsk",						// ProDOS 1.0.1
 	"MerlinDisk2.dsk",
-//	"PDShrinkIts.dsk",				// ???
+//	"PDShrinkIts.dsk",				// ?
 	"ProByter.po",					// ProDOS 1.1.1
 	"ProgramWriter.dsk",			// ProDOS 1.1.1
 //	"ScsiUtilities.po",				// ProDOS 1.8
 //	"Timemaster2HO.dsk",			// ProDOS 1.4, SET.CLOCK
-//	"ZipChipUtilities.dsk",			// ???
+//	"ZipChipUtilities.dsk",			// ?
 	"xxx"
 };
 
@@ -112,7 +112,7 @@ const char *gameSimImages[] = 		// imageDir 2
 	"Apple_Classics_Side_1.dsk",	// DOS 3.3
 	"Apple_Classics_Side_2.dsk",	// DOS 3.3
 	"Aquarium.dsk",					// DOS 3.3
-	"castle_wolfenstein_fixed.dsk",	// ???
+	"castle_wolfenstein_fixed.dsk",	// ?
 	"castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
 	"castle_wolfenstein.dsk",
 	"CastleWolfenstein.dsk",
@@ -162,7 +162,7 @@ unsigned char untranslate6[256];
 //____________________
 int main(int argc, char *argv[])
 {
-	unsigned char sector, prevSector, checksum, writeByte;
+	unsigned char sector, lastSectorSent, prevSector, checksum, writeByte;
 	unsigned int i, j, offset, trkCnt, writeByteCnt, sectorIndex;
 
 	unsigned char *pru;		// start of PRU memory
@@ -212,8 +212,8 @@ int main(int argc, char *argv[])
 
 	printf("\n--- Disk II IF running\n");
 	printf("====================\n");
-	printf("\t<ctrl>-z to change image or save\n");
-	printf("\t<ctrl>-c to quit\n");
+	printf("  <ctrl>-z to change image or save\n");
+	printf("  <ctrl>-c to quit\n");
 	printf("--------------------\n");
 
 	running = 1;
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 		if (track != loadedTrk)						// has A2 moved disk head?
 		{
 			*pru1InterruptPtr = 1;					// pause sending while changing track
-			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
+//			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
 			trkCnt++;								// for display
 
 			// Copy new track to PRU
@@ -243,10 +243,10 @@ int main(int argc, char *argv[])
 			loadedTrk = track;
 			if (VERBOSE)
 			{
-				printf("loadedTrk= %d\n", loadedTrk);
+				printf("%d\t", loadedTrk);
 //				printf("0x%X\t", loadedTrk);
-//				if (trkCnt % 8 == 0)
-//					printf("\n");
+				if (trkCnt % 8 == 0)
+					printf("\n");
 			}
 		}
 
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 			lastSectorSent = *pru1SectorPtr;
 
 			// A2 has enabled drive, EN- = 0
-			if (lastSectorSent != prevSector)	// sector has changed
+			if (lastSectorSent != prevSector)	// PRU finished sending sector
 			{
 				prevSector = lastSectorSent;
 
@@ -263,28 +263,38 @@ int main(int argc, char *argv[])
 				if (*pru1WritePtr == 1)
 				{
 					// a write occurred during this sector
-					// PRU put write data in ram startng at 0x1800 (6144)
-					// Expecting 342 data bytes and 1 checksum byte
+					// PRU put write data in ram startng at 0x1C00
+					// Expecting 342 data bytes + 1 checksum byte + [DE AA EB]
+					// Data: 0x1C01 - 0x1D56, Checksum: 0x1D57, Ep: 0x1D58 - 0x1D5A
 
-					printf("\n------- Write detected. Time to implement.\n\n");
+//					printf("Write: T %d / S %d  0x%X 0x%X 0x%X 0x%X\n", 
+//							loadedTrk, prevSector, *(pru1WriteDataPtr+343),  *(pru1WriteDataPtr+344), *(pru1WriteDataPtr+345), *(pru1WriteDataPtr+346));
 
-					sector = *pru1SectorPtr;
-					writeByteCnt = *pru1WriteCntPtr;
-					if (writeByteCnt < 343)
-						printf("*** writeByteCnt too small: %d (343)\n", writeByteCnt);
+					// Check checksum
+					checksum = 0;
+					for (i=4; i<346; i++)
+						checksum ^= *(pru1WriteDataPtr + i);
+
+					if (checksum != *(pru1WriteDataPtr + 346))
+						printf("*** BAD checksum: 0x%X 0x%X\n", checksum, *(pru1WriteDataPtr + 346));
+
+					if (*(pru1WriteDataPtr+347) != 0xDE ||
+						*(pru1WriteDataPtr+348) != 0xAA ||
+						*(pru1WriteDataPtr+349) != 0xEB)
+						printf("*** BAD write epilogue\n");
+
 
 					// Copy sector from PRU write buffer to theImage[] and PRU track buffer
-					sectorIndex = sector * 374;			// first sync byte of sector
-					checksum = 0;
-					for (i=0, j=SECTOR_DATA_OFFSET; i<343; i++, j++)
+					sectorIndex = prevSector * 374;			// first sync byte of sector
+					for (i=4, j=SECTOR_DATA_OFFSET; i<347; i++, j++)
 					{
 						writeByte = *(pru1WriteDataPtr + i);
-						theImage[loadedTrk][sector][j] = writeByte;
+						theImage[loadedTrk][prevSector][j] = writeByte;
 						*(pru1TrackDataPtr + sectorIndex + j) = writeByte;
-
-						checksum ^= writeByte;
 					}
-					usleep(30000);
+
+					*pru1WritePtr = 0;		// turn off write flag
+//					usleep(30000);
 				}
 
 				// enable sector
@@ -297,6 +307,11 @@ int main(int argc, char *argv[])
 
 	printf("---Shutting down...\n");
 
+
+	for (i=0; i<360; i++)
+		printf("%d\t0x%X\n", i, *(pru1WriteDataPtr + i));
+
+
 	if(munmap(pru, PRU_LEN))
 		printf("*** ERROR: munmap failed at Shutdown\n");
 
@@ -307,6 +322,8 @@ int main(int argc, char *argv[])
 void myShutdown(int sig)
 {
 	// ctrl-C
+	int i;
+
 	printf("\n");
 	running = 0;
 	(void) signal(SIGINT, SIG_DFL);			// reset signal handlling of SIGINT
@@ -400,7 +417,7 @@ void loadDiskImage(const char *imageName)
 	unsigned int i, offset;
 	char *ext;
 	size_t numElements;
-	FILE *fd;	
+	FILE *fd;
 
 	switch (currentImageDir)
 	{

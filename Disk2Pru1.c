@@ -31,7 +31,7 @@
 
 		Write data start	0x1C00
 
-	03/24/2020
+	03/27/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -69,6 +69,7 @@ void InsertBit(signed char bit);
 //____________________
 int main(int argc, char *argv[])
 {
+	unsigned int i;
 	unsigned char sector;
 
 	// Set I/O constants
@@ -87,22 +88,32 @@ int main(int argc, char *argv[])
 
 	PRU1_RAM[WRITE_ADR] = 0;				// no write, yet
 
+
+	for (i=0; i<400; i++)
+		PRU1_RAM[WRITE_DATA_ADR + i] = 0xFF;
+
+
 	while (1)
 	{
 		if ((__R31 & ENABLE) == 0)			// A2 enables us
 		{
 			PRU1_RAM[ENABLE_ADR] = 0;		// EN- = 0
 
-			for (sector=0; sector<NUM_SECTORS_TRACK; sector++)
+			sector = 0;
+			while ((__R31 & ENABLE) == 0)
 			{
 				if (PRU1_RAM[CONT_INT_ADR] == 0)	// Controller enables us
 				{
-					__R30 |= TEST1;			// TEST1 = 1
+//					__R30 |= TEST1;			// TEST1 = 1
 
 					__delay_cycles(2000);			// 10.0 us ???
 					SendSector(sector);
 
 					PRU1_RAM[SECTOR_ADR] = sector;	// tell Controller this sector sent
+
+					sector++;
+					if (sector == 16)
+						sector = 0;
 
 					__R30 &= ~TEST1;		// TEST1 = 0
 				}
@@ -111,12 +122,10 @@ int main(int argc, char *argv[])
 					while (PRU1_RAM[CONT_INT_ADR] == 1)	// wait here till Controller says go
 						__delay_cycles(200);			// 1.0 us ???
 			}
-
 		}
 		else
 		{
 			PRU1_RAM[ENABLE_ADR] = 1;		// EN- = 1
-//			PRU1_RAM[SECTOR_ADR] = 0xFF;	// invalid sector to force Controller to act
 
 			__delay_cycles(200000);			// 1.0 ms
 		}
@@ -154,6 +163,12 @@ void SendSector(unsigned char sector)
 		{
 			sectorAdr++;
 			bitMask = 0x80;
+
+			if ((__R31 & WREQ) == 0)	// is A2 writing something this sectod?
+			{
+				HandleWrite();
+				return;
+			}
 		}
 		else
 			bitMask = bitMask >> 1;
@@ -166,12 +181,31 @@ void SendSector(unsigned char sector)
 void HandleWrite(void)
 {
 	// WREQ- is 0
-	unsigned char count, lastWSIG;
+	unsigned char edgeCnt, count, lastWSIG;
+
+	PRU1_RAM[WRITE_ADR] = 1;		// tell Controller
 
 	// Set up InsertBit()
 	InsertBit(-1);
 
-	while ((__R31 & WSIG) == WSIG);		// wait for WDAT to go low
+	__delay_cycles(4100);		// to get to 00 after first synch byte
+
+
+	// spin for n WSIG rising edges to get past synchs and garbage
+	for (edgeCnt=0; edgeCnt<13; edgeCnt++)			// [21]
+	{
+		while ((__R31 & WSIG) == 0);		// spin while WSIG = 0
+		__delay_cycles(200);				// 1 us
+		while ((__R31 & WSIG) == WSIG);		// spin while WSIG = 1
+		__delay_cycles(1);
+	}
+
+	__R30 |= TEST1;		// TEST1 = 1
+
+//	while ((__R31 & WSIG) == WSIG);		// wait for WDAT to go low
+//	while ((__R31 & WSIG) == 0);		// wait for WDAT to go high
+
+//	__R30 &= ~TEST1;	// TEST1 = 0
 
 	while (1)
 	{
@@ -256,13 +290,13 @@ void InsertBit(signed char bit)
 	// Insert bit into byteInProcess and put in RAM when byte completed
 	// If bit = -1, reset parameters (start of packet)
 	static unsigned char bitCnt, byteInProcess;
-	static unsigned int writeAdr, byteCnt;
+	static unsigned int writeAdr;
 
 	if (bit == -1)
 	{
-		bitCnt  = 1;
-		byteCnt = 0;
-		byteInProcess = 0x02;		// we miss first 1 in byte 0
+		bitCnt  = 0;
+//		byteCnt = 0;
+		byteInProcess = 0x00;
 		writeAdr = WRITE_DATA_ADR;
 	}
 	else
@@ -277,7 +311,7 @@ void InsertBit(signed char bit)
 			PRU1_RAM[writeAdr] = byteInProcess;
 			writeAdr++;
 			bitCnt = 0;
-			byteCnt++;
+//			byteCnt++;
 		}
 		else
 		{
@@ -290,55 +324,6 @@ void InsertBit(signed char bit)
 
 
 /*
-DELAY1:
-	LDI		r1, 128						// ~2 us while RDATA is 1 or 0
-D1:
-	SUB		r1, r1, 1
-	QBBC	WRITING, r31.t4				// check WREQ-
-	QBNE	D1, r1, 0	
-	
-	CLR		RDAT						// clear RD
-	AND		r1, r1, r1					// NOP
-	
-	LDI		r1, 128						// ~2 us while RDATA is 0
-D2:
-	SUB		r1, r1, 1
-	QBBC	WRITING, r31.t4
-	QBNE	D2, r1, 0	
-	
-	QBNE	NEXTBIT, r3.b0, 0x01		// still working on this byte?
-
-//_____________________________		If byte sent, do some progress and status checking
-NEXTBYTE:
-	ADD		r0, r0, 1					// increment byte index
-	LDI		r3.b0, 0x80					// reset bit mask
-	ADD		r6, r6, 1					// increment byte count for this sector
-	
-	QBEQ	NEXTSEC, r6, r20			// r20 = num bytes in sector
-	QBBC	WRITING, r31.t4				// check WREQ- often
-	QBA		SECTOR
-
-//_____________________________		If within a byte, delay to balance NEXTBYTE
-NEXTBIT:
-	LSR		r3.b0, r3.b0, 1				// read bit mask, shift to next bit to right
-	AND		r1, r1, r1					// NOP 1
-	AND		r1, r1, r1					// NOP 2
-	AND		r1, r1, r1					// NOP 3
-	QBBC	WRITING, r31.t4
-	QBA		SECTOR
-	
-//_____________________________		If finished with sector, tell Controller & pause
-NEXTSEC:
-	LBBO	r1.b0, r24, 0, 1			// get current status, don't know if there was a write
-	OR		r1.b0, r1.b0, 0x02			// set done sending bit
-	SBBO	r1.b0, r24, 0, 1			// put status in ram
-	
-	WBS		r31.t31						// wait for ARM_PRU1_INTERRUPT
-	
-	ADD		r5.b0, r5.b0, 1				// increment sector number
-	QBEQ	TRACK, r5.b0, 16			// 16 sectors / track, so restart track at sector 0
-	QBA		NEWSECTOR
-
 
 //_____________________________		Capture a sector of write data
 WRITING:

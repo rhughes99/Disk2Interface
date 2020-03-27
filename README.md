@@ -15,9 +15,13 @@ How to run:
 
 4) make
 
-5) ./Controller
+5) Turn on A2
 
-6) Turn on A2	
+6) ./Controller
+
+7) -prodrive
+   -set.clock
+   -util.system, to copy files to RAM drivek
 
 
 (Ins and Outs relative to BBB)
