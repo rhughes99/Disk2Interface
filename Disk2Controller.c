@@ -74,56 +74,56 @@ const unsigned int SECTOR_DATA_OFFSET = 26;				// location of first data byte, 0
 // First image is loaded at startup
 const char *theImages[] =
 {
-	"startupImages/BasicStartup.po",				// ProDOS 2.0.3
-//	"startupImages/Working.po",
-	"startupImages/MerlinWorking.po",
-//	"startupImages/SavedStart.po",					// saved combo of all below
-//	"startupImages/SystemData.po",					// SavedStart + some source files
-//	"startupImages/MySystem.po",					// ProDOS 2.0.3
-//	"startupImages/MerlinDisk1.dsk",				// ProDOS 1.1.1, MERLIN.SYSTEM
-	"startupImages/SmartApples.po",					// Smart Apples BASIC programs
+	"Startup/BasicStartup.po",				// ProDOS 2.0.3
+//	"Startup/Working.po",
+	"Startup/MerlinWorking.po",
+//	"Startup/SavedStart.po",					// saved combo of all below
+//	"Startup/SystemData.po",					// SavedStart + some source files
+//	"Startup/MySystem.po",					// ProDOS 2.0.3
+//	"Startup/MerlinDisk1.dsk",				// ProDOS 1.1.1, MERLIN.SYSTEM
+	"Startup/SmartApples.po",					// Smart Apples BASIC programs
 
-//	"utilityImages/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
-	"utilityImages/Apple_DOS33.dsk",				// DOS 3.3
-	"utilityImages/BagOfTricksII.dsk",				// ProDOS 1.1.1
-	"utilityImages/BeagleCompiler22.dsk",			// ProDOS 1.2
-//	"utilityImages/Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
-	"utilityImages/DCode.dsk",						// ProDOS 1.1.1
-	"utilityImages/Diagnostics_IIe.dsk",
-//	"utilityImages/GPLE.dsk",						// ProDOS 1.0.1
-	"utilityImages/MerlinDisk2.dsk",
-//	"utilityImages/PDShrinkIts.dsk",				// ?
-	"utilityImages/ProByter.po",					// ProDOS 1.1.1
-	"utilityImages/ProgramWriter.dsk",				// ProDOS 1.1.1
-//	"utilityImages/ScsiUtilities.po",				// ProDOS 1.8
-//	"utilityImages/Timemaster2HO.dsk",				// ProDOS 1.4, SET.CLOCK
-//	"utilityImages/ZipChipUtilities.dsk",			// ?
+//	"Utilities/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
+	"Utilities/Apple_DOS33.dsk",				// DOS 3.3
+	"Utilities/BagOfTricksII.dsk",				// ProDOS 1.1.1
+	"Utilities/BeagleCompiler22.dsk",			// ProDOS 1.2
+//	"Utilities/Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
+	"Utilities/DCode.dsk",						// ProDOS 1.1.1
+	"Utilities/Diagnostics_IIe.dsk",
+//	"Utilities/GPLE.dsk",						// ProDOS 1.0.1
+	"Utilities/MerlinDisk2.dsk",
+//	"Utilities/PDShrinkIts.dsk",				// ?
+	"Utilities/ProByter.po",					// ProDOS 1.1.1
+	"Utilities/ProgramWriter.dsk",				// ProDOS 1.1.1
+//	"Utilities/ScsiUtilities.po",				// ProDOS 1.8
+//	"Utilities/Timemaster2HO.dsk",				// ProDOS 1.4, SET.CLOCK
+//	"Utilities/ZipChipUtilities.dsk",			// ?
 
-	"gameSimImages/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
-	"gameSimImages/Apple_Classics_Side_1.dsk",		// DOS 3.3
-	"gameSimImages/Apple_Classics_Side_2.dsk",		// DOS 3.3
-	"gameSimImages/Aquarium.dsk",					// DOS 3.3
-	"gameSimImages/castle_wolfenstein_fixed.dsk",	// ?
-	"gameSimImages/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
-	"gameSimImages/castle_wolfenstein.dsk",
-	"gameSimImages/CastleWolfenstein.dsk",
-	"gameSimImages/Dinosaurs.dsk",					// DOS 3.3
-	"gameSimImages/Flight_Sim_II.dsk",				// Boot only
-	"gameSimImages/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
-	"gameSimImages/FormulaNibble.dsk",
-	"gameSimImages/FS2.dsk",						// Boot only, same as Flight_Sim_ II
-	"gameSimImages/HighSeas_S1.dsk",				// ProDOS
-	"gameSimImages/HighSeas_S2.dsk",				// Data only
-	"IgameSimImages/OSilver.dsk",
-	"gameSimImages/SilentService.dsk",
-	"gameSimImages/Sudoku.dsk",						// ProDOS 1.8
+	"GamesSims/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
+	"GamesSims/Apple_Classics_Side_1.dsk",		// DOS 3.3
+	"GamesSims/Apple_Classics_Side_2.dsk",		// DOS 3.3
+	"GamesSims/Aquarium.dsk",					// DOS 3.3
+	"GamesSims/castle_wolfenstein_fixed.dsk",	// ?
+	"GamesSims/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
+	"GamesSims/castle_wolfenstein.dsk",
+	"GamesSims/CastleWolfenstein.dsk",
+	"GamesSims/Dinosaurs.dsk",					// DOS 3.3
+	"GamesSims/Flight_Sim_II.dsk",				// Boot only
+	"GamesSims/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
+	"GamesSims/FormulaNibble.dsk",
+	"GamesSims/FS2.dsk",						// Boot only, same as Flight_Sim_ II
+	"GamesSims/HighSeas_S1.dsk",				// ProDOS
+	"GamesSims/HighSeas_S2.dsk",				// Data only
+	"GamesSims/OSilver.dsk",
+	"GamesSims/SilentService.dsk",
+	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
 
-	"holdingPenImages/ChessMaster2000b.dsk",
-	"holdingPenImages/Minesweeper.dsk",
-	"holdingPenImages/Monopoly.dsk",
-	"holdingPenImages/RISK.dsk",
-	"holdingPenImages/sorry_s1.dsk",
-	"holdingPenImages/sorry_s2.dsk",
+	"HoldingPen/ChessMaster2000b.dsk",
+	"HoldingPen/Minesweeper.dsk",
+	"HoldingPen/Monopoly.dsk",
+	"HoldingPen/RISK.dsk",
+	"HoldingPen/sorry_s1.dsk",
+	"HoldingPen/sorry_s2.dsk",
 };
 
 unsigned char theImage[35][16][374];			// [NUM_TRACKS][NUM_SECTORS_PER_TRACK][SMALL_NIBBLE_SIZE]
@@ -148,8 +148,8 @@ unsigned char untranslate6[256];
 int main(int argc, char *argv[])
 {
 	unsigned char sector, lastSectorSent, prevSector, checksum, writeByte;
-	unsigned int i, j, offset, trkCnt, writeByteCnt, sectorIndex;
-	unsigned char tempSector[SMALL_NIBBLE_SIZE];
+	unsigned int i, j, k, offset, trkCnt, writeByteCnt, sectorIndex;
+//	unsigned char tempSector[SMALL_NIBBLE_SIZE];
 
 	unsigned char *pru;		// start of PRU memory
 	int	fd;
@@ -263,13 +263,13 @@ int main(int argc, char *argv[])
 						theImage[loadedTrk][prevSector][j] = writeByte;
 						*(pru1TrackDataPtr + sectorIndex + j) = writeByte;
 
-						tempSector[k] = writeByte;
+//						tempSector[k] = writeByte;
 					}
 
 					// Debug - yet another checksum thought
-					checksum = computeDataChecksum(tempSector);
-					if (checksum != *(pru1WriteDataPtr + 346))
-						printf("*** BAD checksum: 0x%X 0x%X\n", checksum, *(pru1WriteDataPtr + 346));
+//					checksum = computeDataChecksum(tempSector);
+//					if (checksum != *(pru1WriteDataPtr + 346))
+//						printf("*** BAD checksum: 0x%X 0x%X\n", checksum, *(pru1WriteDataPtr + 346));
 
 					*pru1WritePtr = 0;		// turn off write flag
 				}
@@ -311,33 +311,37 @@ void changeImage(int sig)
 	size_t numImages, length;
 	char saveName[32];
 
-	numImages = sizeof(theImages) / sizeof(theImages[0]);
-	printf("========== ========== ========== ========== ========== ==========\n");
+	printf("\n\n");
 	printf("Loaded image: %s\n", loadedImageName);
+	numImages = sizeof(theImages) / sizeof(theImages[0]);
+
+	printf("========== ========== ========== ========== ========== ==========\n");
 	for (i=0; i<numImages; i++)
 	{
 		printf("[%d] %s", i, theImages[i]);
 		if (i%3 == 2)
 			printf("\n");
 		else
-			printf("\t\t");
+			printf("\t");
 	}
 	printf("\n========== ========== ========== ========== ========== ==========\n");
 
 	printf("Save loaded image? Enter name (???.po or ???.dsk) or <CR>: ");
 	fgets(saveName, 32, stdin);
-	length = strlen(saveName) - 1;	// points to last char in saveName
+	length = strlen(saveName) - 1;		// points to last char in saveName
 	if (saveName[length] == '\n')
 		saveName[length] = '\0';
 
 	if (length > 5)
 		saveDiskImage(saveName);
 
-	printf("Select image to load (99 to keep current): ");
+	printf("\nSelect image to load (99 to keep current): ");
 	scanf("%d", &selection);
 	if (selection == 99)
+	{
+		printf("Current image: %s\n", loadedImageName);
 		return;
-
+	}
 	loadDiskImage(theImages[selection]);
 }
 
@@ -393,7 +397,7 @@ void loadDiskImage(const char *imageName)
 	}
 
 	strcpy(loadedImageName, imageName);
-/*
+
 	// Load track 0 into PRU1 data ram
 	*pru1InterruptPtr = 1;					// pause PRU1 while changing track
 
@@ -407,7 +411,6 @@ void loadDiskImage(const char *imageName)
 
 	track = 0;
 	loadedTrk = 0;
-*/
 }
 
 //____________________
@@ -650,11 +653,13 @@ unsigned char decodeNibByte(unsigned char *nibInt, unsigned char *nibData)
 }
 
 //____________________
-unsigned char computeDataChecksum(*unsigned char nibble)
+unsigned char computeDataChecksum(unsigned char *nibble)
 {
 	// Converts 342 data bytes to 256 bytes & returns checksum (0 if error)
 	unsigned char b, xorValue, newValue;
 	unsigned int i;
+
+	char data[NUM_BYTES_PER_SECTOR];
 
 	xorValue = 0;
 	for (i=0; i<342; i++)
@@ -685,7 +690,4 @@ unsigned char computeDataChecksum(*unsigned char nibble)
 	}
 	return xorValue;
 }
-
-
-
 

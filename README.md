@@ -13,13 +13,15 @@ How to run:
 3) Insert SD card and mount
 	mount -v /dev/mmcblk0p1 /root/DiskImages
 
-4) make
+4) Set Terminal tabs: tabs -50
 
-5) Turn on A2
+5) make
 
-6) ./Controller
+6) Turn on A2
 
-7) -prodrive
+7) ./Controller
+
+8) -prodrive
    -set.clock
    -util.system, to copy files to RAM drivek
 

@@ -66,7 +66,7 @@ void InsertBit(signed char bit);
 //____________________
 int main(int argc, char *argv[])
 {
-	unsigned int i;
+//	unsigned int i;
 	unsigned char sector;
 
 	// Set I/O constants
