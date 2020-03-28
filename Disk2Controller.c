@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/27/2020
+	03/28/2020
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +23,7 @@ unsigned char dosTranslateSector(unsigned char sector);
 unsigned char prodosTranslateSector(unsigned char sector);
 unsigned char diskDecodeNib(unsigned char *data, unsigned char *nibble);
 unsigned char decodeNibByte(unsigned char *nibInt, unsigned char *nibData);
+unsigned char computeDataChecksum(unsigned char *nibble);
 
 // PRU Memory Locations
 #define PRU_ADDR			0x4A300000		// Start of PRU memory Page 163 am335x TRM
@@ -39,7 +40,6 @@ unsigned char decodeNibByte(unsigned char *nibInt, unsigned char *nibData);
 #define ENABLE_ADR			0x1B00		// EN- state
 #define SECTOR_ADR			0x1B01		// current sector number
 #define WRITE_ADR			0x1B02		// 1 = write occurred
-#define WRITE_CNT_ADR		0x1B03		// num write bytes, int
 #define CONT_INT_ADR		0x1B07		// Controller interrupt, 1 = stop
 #define WRITE_DATA_ADR		0x1C00		// address of first write byte
 
@@ -57,7 +57,6 @@ static unsigned char *pru1TrackDataPtr;		// Controller puts loaded track data (s
 static unsigned char *pru1EnPtr;			// EN-
 static unsigned char *pru1SectorPtr;		// last sector sent to A2
 static unsigned char *pru1WritePtr;			// 1 = write occurred
-static unsigned int  *pru1WriteCntPtr;		// num bytes written by A2
 static unsigned char *pru1InterruptPtr;		// set by Controller, 1 = stop sending to A2
 static unsigned char *pru1WriteDataPtr;		// first byte of data written by A2
 
@@ -72,77 +71,63 @@ const unsigned int SMALL_NIBBLE_SIZE = 374;				// one encoded sector, sync + add
 const unsigned int NUM_ENCODED_BYTES_PER_TRACK = 5984;	// 16 * 374
 const unsigned int SECTOR_DATA_OFFSET = 26;				// location of first data byte, 0-based
 
-unsigned char currentImageDir = 0;
-const char *startupImages[] = 		// imageDir 0
+// First image is loaded at startup
+const char *theImages[] =
 {
-	"BasicStartup.po",				// ProDOS 2.0.3
-//	"Working.po",
-	"MerlinWorking.po",
-//	"SavedStart.po",				// saved combo of all below
-//	"SystemData.po",				// SavedStart + some source files
-//	"MySystem.po",					// ProDOS 2.0.3
-//	"MerlinDisk1.dsk",				// ProDOS 1.1.1, MERLIN.SYSTEM
-	"SmartApples.po",				// Smart Apples BASIC programs
-	"xxx"
-};
+	"startupImages/BasicStartup.po",				// ProDOS 2.0.3
+//	"startupImages/Working.po",
+	"startupImages/MerlinWorking.po",
+//	"startupImages/SavedStart.po",					// saved combo of all below
+//	"startupImages/SystemData.po",					// SavedStart + some source files
+//	"startupImages/MySystem.po",					// ProDOS 2.0.3
+//	"startupImages/MerlinDisk1.dsk",				// ProDOS 1.1.1, MERLIN.SYSTEM
+	"startupImages/SmartApples.po",					// Smart Apples BASIC programs
 
-const char *utilityImages[] = 		// imageDir 1
-{
-//	"AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
-	"Apple_DOS33.dsk",				// DOS 3.3
-	"BagOfTricksII.dsk",			// ProDOS 1.1.1
-	"BeagleCompiler22.dsk",			// ProDOS 1.2
-//	"Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
-	"DCode.dsk",					// ProDOS 1.1.1
-	"Diagnostics_IIe.dsk",
-//	"GPLE.dsk",						// ProDOS 1.0.1
-	"MerlinDisk2.dsk",
-//	"PDShrinkIts.dsk",				// ?
-	"ProByter.po",					// ProDOS 1.1.1
-	"ProgramWriter.dsk",			// ProDOS 1.1.1
-//	"ScsiUtilities.po",				// ProDOS 1.8
-//	"Timemaster2HO.dsk",			// ProDOS 1.4, SET.CLOCK
-//	"ZipChipUtilities.dsk",			// ?
-	"xxx"
-};
+//	"utilityImages/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
+	"utilityImages/Apple_DOS33.dsk",				// DOS 3.3
+	"utilityImages/BagOfTricksII.dsk",				// ProDOS 1.1.1
+	"utilityImages/BeagleCompiler22.dsk",			// ProDOS 1.2
+//	"utilityImages/Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
+	"utilityImages/DCode.dsk",						// ProDOS 1.1.1
+	"utilityImages/Diagnostics_IIe.dsk",
+//	"utilityImages/GPLE.dsk",						// ProDOS 1.0.1
+	"utilityImages/MerlinDisk2.dsk",
+//	"utilityImages/PDShrinkIts.dsk",				// ?
+	"utilityImages/ProByter.po",					// ProDOS 1.1.1
+	"utilityImages/ProgramWriter.dsk",				// ProDOS 1.1.1
+//	"utilityImages/ScsiUtilities.po",				// ProDOS 1.8
+//	"utilityImages/Timemaster2HO.dsk",				// ProDOS 1.4, SET.CLOCK
+//	"utilityImages/ZipChipUtilities.dsk",			// ?
 
-const char *gameSimImages[] = 		// imageDir 2
-{
-	"A2_FS1_Flight_Sim.dsk",		// DOS 3.3
-	"Apple_Classics_Side_1.dsk",	// DOS 3.3
-	"Apple_Classics_Side_2.dsk",	// DOS 3.3
-	"Aquarium.dsk",					// DOS 3.3
-	"castle_wolfenstein_fixed.dsk",	// ?
-	"castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
-	"castle_wolfenstein.dsk",
-	"CastleWolfenstein.dsk",
-	"Dinosaurs.dsk",				// DOS 3.3
-	"Flight_Sim_II.dsk",			// Boot only
-	"FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
-	"FormulaNibble.dsk",
-	"FS2.dsk",						// Boot only, same as Flight_Sim_ II
-	"HighSeas_S1.dsk",				// ProDOS
-	"HighSeas_S2.dsk",				// Data only
-	"IOSilver.dsk",
-	"SilentService.dsk",
-	"Sudoku.dsk",					// ProDOS 1.8
-	"xxx"
-};
+	"gameSimImages/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
+	"gameSimImages/Apple_Classics_Side_1.dsk",		// DOS 3.3
+	"gameSimImages/Apple_Classics_Side_2.dsk",		// DOS 3.3
+	"gameSimImages/Aquarium.dsk",					// DOS 3.3
+	"gameSimImages/castle_wolfenstein_fixed.dsk",	// ?
+	"gameSimImages/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
+	"gameSimImages/castle_wolfenstein.dsk",
+	"gameSimImages/CastleWolfenstein.dsk",
+	"gameSimImages/Dinosaurs.dsk",					// DOS 3.3
+	"gameSimImages/Flight_Sim_II.dsk",				// Boot only
+	"gameSimImages/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
+	"gameSimImages/FormulaNibble.dsk",
+	"gameSimImages/FS2.dsk",						// Boot only, same as Flight_Sim_ II
+	"gameSimImages/HighSeas_S1.dsk",				// ProDOS
+	"gameSimImages/HighSeas_S2.dsk",				// Data only
+	"IgameSimImages/OSilver.dsk",
+	"gameSimImages/SilentService.dsk",
+	"gameSimImages/Sudoku.dsk",						// ProDOS 1.8
 
-const char *holdingPenImages[] =	// imageDir 3
-{
-	"ChessMaster2000b.dsk",
-	"Minesweeper.dsk",
-	"Monopoly.dsk",
-	"RISK.dsk",
-	"sorry_s1.dsk",
-	"sorry_s2.dsk",
-	"xxx"
+	"holdingPenImages/ChessMaster2000b.dsk",
+	"holdingPenImages/Minesweeper.dsk",
+	"holdingPenImages/Monopoly.dsk",
+	"holdingPenImages/RISK.dsk",
+	"holdingPenImages/sorry_s1.dsk",
+	"holdingPenImages/sorry_s2.dsk",
 };
-
-const char *sdCardDirs[] = {"Startup", "Utilities", "Games & Simulations", "HoldingPen"};
 
 unsigned char theImage[35][16][374];			// [NUM_TRACKS][NUM_SECTORS_PER_TRACK][SMALL_NIBBLE_SIZE]
+unsigned char loadedImageName[64];
 
 //____________________
 const unsigned char translate6[64] =
@@ -164,6 +149,7 @@ int main(int argc, char *argv[])
 {
 	unsigned char sector, lastSectorSent, prevSector, checksum, writeByte;
 	unsigned int i, j, offset, trkCnt, writeByteCnt, sectorIndex;
+	unsigned char tempSector[SMALL_NIBBLE_SIZE];
 
 	unsigned char *pru;		// start of PRU memory
 	int	fd;
@@ -193,12 +179,11 @@ int main(int argc, char *argv[])
 	pru1EnPtr			= pru1RAMptr + ENABLE_ADR;
 	pru1SectorPtr		= pru1RAMptr + SECTOR_ADR;
 	pru1WritePtr		= pru1RAMptr + WRITE_ADR;
-	pru1WriteCntPtr		= (int *)(pru1RAMptr + WRITE_CNT_ADR);
 	pru1InterruptPtr	= pru1RAMptr + CONT_INT_ADR;
 	pru1WriteDataPtr	= pru1RAMptr + WRITE_DATA_ADR;
 
 	// Load disk image (into theImage and PRU 1)
-	loadDiskImage(startupImages[0]);						// first startup image
+	loadDiskImage(theImages[0]);							// first image in list
 
 	// Set up untranslate6 table
 	for (i=0; i<NUM_BYTES_PER_SECTOR; i++)					// fill with FFs to detect when we are out of range
@@ -228,8 +213,6 @@ int main(int argc, char *argv[])
 		if (track != loadedTrk)						// has A2 moved disk head?
 		{
 			*pru1InterruptPtr = 1;					// pause sending while changing track
-//			usleep(1000);							// give PRU time to finish sector??? (1 sector > 11 ms)
-			trkCnt++;								// for display
 
 			// Copy new track to PRU
 			for (sector=0; sector<NUM_SECTORS_PER_TRACK; sector++)
@@ -241,6 +224,7 @@ int main(int argc, char *argv[])
 			*pru1InterruptPtr = 0;					// turn sending back on
 
 			loadedTrk = track;
+			trkCnt++;								// for display
 			if (VERBOSE)
 			{
 				printf("%d\t", loadedTrk);
@@ -262,39 +246,32 @@ int main(int argc, char *argv[])
 				// But first, did a write occur during last sector?
 				if (*pru1WritePtr == 1)
 				{
-					// a write occurred during this sector
-					// PRU put write data in ram startng at 0x1C00
+					// Write occurred during this sector
 					// Expecting 342 data bytes + 1 checksum byte + [DE AA EB]
-					// Data: 0x1C01 - 0x1D56, Checksum: 0x1D57, Ep: 0x1D58 - 0x1D5A
 
-//					printf("Write: T %d / S %d  0x%X 0x%X 0x%X 0x%X\n", 
-//							loadedTrk, prevSector, *(pru1WriteDataPtr+343),  *(pru1WriteDataPtr+344), *(pru1WriteDataPtr+345), *(pru1WriteDataPtr+346));
-
-					// Check checksum
-					checksum = 0;
-					for (i=4; i<346; i++)
-						checksum ^= *(pru1WriteDataPtr + i);
-
-					if (checksum != *(pru1WriteDataPtr + 346))
-						printf("*** BAD checksum: 0x%X 0x%X\n", checksum, *(pru1WriteDataPtr + 346));
-
+					// Gross write integrity check: Is epilogue in expected location?
 					if (*(pru1WriteDataPtr+347) != 0xDE ||
 						*(pru1WriteDataPtr+348) != 0xAA ||
 						*(pru1WriteDataPtr+349) != 0xEB)
 						printf("*** BAD write epilogue\n");
 
-
 					// Copy sector from PRU write buffer to theImage[] and PRU track buffer
 					sectorIndex = prevSector * 374;			// first sync byte of sector
-					for (i=4, j=SECTOR_DATA_OFFSET; i<347; i++, j++)
+					for (i=4, j=SECTOR_DATA_OFFSET, k=0; i<347; i++, j++, k++)
 					{
 						writeByte = *(pru1WriteDataPtr + i);
 						theImage[loadedTrk][prevSector][j] = writeByte;
 						*(pru1TrackDataPtr + sectorIndex + j) = writeByte;
+
+						tempSector[k] = writeByte;
 					}
 
+					// Debug - yet another checksum thought
+					checksum = computeDataChecksum(tempSector);
+					if (checksum != *(pru1WriteDataPtr + 346))
+						printf("*** BAD checksum: 0x%X 0x%X\n", checksum, *(pru1WriteDataPtr + 346));
+
 					*pru1WritePtr = 0;		// turn off write flag
-//					usleep(30000);
 				}
 
 				// enable sector
@@ -307,12 +284,11 @@ int main(int argc, char *argv[])
 
 	printf("---Shutting down...\n");
 
+	// Debug
+//	for (i=0; i<360; i++)
+//		printf("%d\t0x%X\n", i, *(pru1WriteDataPtr + i));
 
-	for (i=0; i<360; i++)
-		printf("%d\t0x%X\n", i, *(pru1WriteDataPtr + i));
-
-
-	if(munmap(pru, PRU_LEN))
+	if (munmap(pru, PRU_LEN))
 		printf("*** ERROR: munmap failed at Shutdown\n");
 
 	return EXIT_SUCCESS;
@@ -322,8 +298,6 @@ int main(int argc, char *argv[])
 void myShutdown(int sig)
 {
 	// ctrl-C
-	int i;
-
 	printf("\n");
 	running = 0;
 	(void) signal(SIGINT, SIG_DFL);			// reset signal handlling of SIGINT
@@ -333,75 +307,38 @@ void myShutdown(int sig)
 void changeImage(int sig)
 {
 	// ctrl-Z
-	char saveName[32], imageName[32];
-	static unsigned char startupImageNum = 1;	// image 0 was loaded at startup
-	static unsigned char utilityImageNum = 0;
-	static unsigned char gameSimImageNum = 0;
-	static unsigned char holdingPenImageNum = 0;
+	unsigned int i, selection;
+	size_t numImages, length;
+	char saveName[32];
 
-	size_t length;
-
-	for (length=0; length<32; length++)		// to ensure imageName is terminated
-		imageName[length] = '\0';
-
-	// Ask about saving current image
-	printf("\n--> Save image? Enter save name, new dir num, or <CR>: ");
-	fgets(saveName, 32, stdin);
-	length = strlen(saveName);
-//	printf("length= %d\n", length);
-	if (length > 5)							// new saved name entered
+	numImages = sizeof(theImages) / sizeof(theImages[0]);
+	printf("========== ========== ========== ========== ========== ==========\n");
+	printf("Loaded image: %s\n", loadedImageName);
+	for (i=0; i<numImages; i++)
 	{
-		// Need to strip CR
-		strncpy(imageName, saveName, length-1);
-		saveDiskImage(imageName);			// this is compressed (256 bytes/sector) format, ready to re-loaded
-	}
-
-	else if (length == 2)					// new dir number entered
-	{
-		currentImageDir = atoi(saveName);
-		if (currentImageDir < 4)			// can we compute this dynamically? number of elements in sdCardDirs[]?
-		{
-//			printf("New dir number entered: %d\n", currentImageDir);
-			printf("\nSwitching to <<%s>>\n", sdCardDirs[currentImageDir]);
-//			currentImageDir = atoi(saveName);
-		}
+		printf("[%d] %s", i, theImages[i]);
+		if (i%3 == 2)
+			printf("\n");
 		else
-			printf("\n*** Invalid directory number entered!\n");
+			printf("\t\t");
 	}
+	printf("\n========== ========== ========== ========== ========== ==========\n");
 
-	switch (currentImageDir)
-	{
-		case 0:
-			loadDiskImage(startupImages[startupImageNum]);
-			startupImageNum++;
-			if (strcmp(startupImages[startupImageNum], "xxx") == 0)
-				startupImageNum = 0;
-			break;
+	printf("Save loaded image? Enter name (???.po or ???.dsk) or <CR>: ");
+	fgets(saveName, 32, stdin);
+	length = strlen(saveName) - 1;	// points to last char in saveName
+	if (saveName[length] == '\n')
+		saveName[length] = '\0';
 
-		case 1:
-			loadDiskImage(utilityImages[utilityImageNum]);
-			utilityImageNum++;
-			if (strcmp(utilityImages[utilityImageNum], "xxx") == 0)
-				utilityImageNum = 0;
-			break;
+	if (length > 5)
+		saveDiskImage(saveName);
 
-		case 2:
-			loadDiskImage(gameSimImages[gameSimImageNum]);
-			gameSimImageNum++;
-			if (strcmp(gameSimImages[gameSimImageNum], "xxx") == 0)
-				gameSimImageNum = 0;
-			break;
+	printf("Select image to load (99 to keep current): ");
+	scanf("%d", &selection);
+	if (selection == 99)
+		return;
 
-		case 3:
-			loadDiskImage(holdingPenImages[holdingPenImageNum]);
-			holdingPenImageNum++;
-			if (strcmp(holdingPenImages[holdingPenImageNum], "xxx") == 0)
-				holdingPenImageNum = 0;
-			break;
-
-		default:
-			printf("\n*** changeImage(): Unexpected currentImageDir value [%d]\n", currentImageDir);
-	}
+	loadDiskImage(theImages[selection]);
 }
 
 //____________________
@@ -409,7 +346,6 @@ void loadDiskImage(const char *imageName)
 {
 	/*	Loads disk image into theImage
 		Accounts for sector interleaving
-		Then loads track 0 into PRU1 data ram
 	*/
 	unsigned char trk, sector, translatedSector;
 	unsigned char tempBuff[NUM_TRACKS][NUM_SECTORS_PER_TRACK][NUM_BYTES_PER_SECTOR];
@@ -419,29 +355,8 @@ void loadDiskImage(const char *imageName)
 	size_t numElements;
 	FILE *fd;
 
-	switch (currentImageDir)
-	{
-		case 0:
-			sprintf(imagePath, "/root/DiskImages/Small/Startup/%s", imageName);	// full image path
-			break;
-
-		case 1:
-			sprintf(imagePath, "/root/DiskImages/Small/Utilities/%s", imageName);
-			break;
-
-		case 2:
-			sprintf(imagePath, "/root/DiskImages/Small/GamesSims/%s", imageName);
-			break;
-
-		case 3:
-			sprintf(imagePath, "/root/DiskImages/Small/HoldingPen/%s", imageName);
-			break;
-
-		default:
-			printf("\n*** loadDiskImage(): Unexpected currentImageDir value [%d]\n", currentImageDir);
-	}
-
 	printf("\n  --- %s ---\n", imageName);
+	sprintf(imagePath, "/root/DiskImages/Small/%s", imageName);
 	fd = fopen(imagePath, "rb");
 	if (!fd)
 	{
@@ -477,6 +392,8 @@ void loadDiskImage(const char *imageName)
 		}
 	}
 
+	strcpy(loadedImageName, imageName);
+/*
 	// Load track 0 into PRU1 data ram
 	*pru1InterruptPtr = 1;					// pause PRU1 while changing track
 
@@ -490,6 +407,7 @@ void loadDiskImage(const char *imageName)
 
 	track = 0;
 	loadedTrk = 0;
+*/
 }
 
 //____________________
@@ -587,7 +505,7 @@ unsigned char prodosTranslateSector(unsigned char sector)
 //____________________
 void saveDiskImage(const char *fileName)
 {
-	/*	Saves disk image to /root/DiskImages/Small/fileName in format that can be loaded
+	/*	Saves disk image to /root/DiskImages/Small/Saved/fileName in format that can be loaded
 		Inverse of loadDiskImage()
 		Will overwrite existing file!
 		Accounts for sector interleaving
@@ -595,7 +513,7 @@ void saveDiskImage(const char *fileName)
 	unsigned char trk, sector, unTranslatedSector, resp;
 	unsigned char tempBuff[NUM_TRACKS][NUM_SECTORS_PER_TRACK][NUM_BYTES_PER_SECTOR];
 	unsigned char unTranslateSector_DOS[16], unTranslateSector_ProDOS[16];
-	char imagePath[64];
+	char imagePath[128];
 	unsigned int i;
 	char *ext;
 	FILE *fd;
@@ -608,7 +526,7 @@ void saveDiskImage(const char *fileName)
 	}
 
 	// Decode image into tempBuff, accounting for sector interleaving
-	sprintf(imagePath, "/root/DiskImages/Small/%s", fileName);	// create image path
+	sprintf(imagePath, "/root/DiskImages/Small/Saved/%s", fileName);
 	ext = strrchr(imagePath, '.');				// get file extension
 	for (trk=0; trk<NUM_TRACKS; trk++)
 	{
@@ -621,7 +539,7 @@ void saveDiskImage(const char *fileName)
 				unTranslatedSector = unTranslateSector_ProDOS[sector];
 
 			resp = diskDecodeNib(tempBuff[trk][sector], theImage[trk][unTranslatedSector]);
-			if (resp == 1)		// error occurred
+			if (resp == 1)		// decode error occurred
 			{
 				printf("\n***   trk= %d sector= %d\n", trk, sector);
 				return;
@@ -651,7 +569,6 @@ void saveDiskImage(const char *fileName)
 unsigned char diskDecodeNib(unsigned char *data, unsigned char *nibble)
 {
 	// Converts 374 byte disk sector to 256 byte file sector
-
 	unsigned char readVolume, readTrack, readSector, readChecksum;
 	unsigned char b, xorValue, newValue;
 	unsigned int i;
@@ -731,3 +648,44 @@ unsigned char decodeNibByte(unsigned char *nibInt, unsigned char *nibData)
 	*nibInt |= (nibData[1] & ~0xAA) << 0;
 	return 0;
 }
+
+//____________________
+unsigned char computeDataChecksum(*unsigned char nibble)
+{
+	// Converts 342 data bytes to 256 bytes & returns checksum (0 if error)
+	unsigned char b, xorValue, newValue;
+	unsigned int i;
+
+	xorValue = 0;
+	for (i=0; i<342; i++)
+	{
+		b = untranslate6[nibble[i]];		// first data
+		if (b == 0xFF)
+		{
+			printf("\n*** ComputeDataChecksum: Out of range in untranslate6: %d\n", nibble[i]);
+			return 0;
+		}
+
+		newValue = b ^ xorValue;
+
+		if (i >= 0x56)
+		{
+			// 6 bit
+			data[i - 0x56] |= (newValue << 2);
+		}
+		else
+		{
+			// 3 * 2 bit
+			data[i + 0x00] = ((newValue >> 1) & 0x01) | ((newValue << 1) & 0x02);
+			data[i + 0x56] = ((newValue >> 3) & 0x01) | ((newValue >> 1) & 0x02);
+			if (i + 0xAC < NUM_BYTES_PER_SECTOR)
+				data[i + 0xAC] = ((newValue >> 5) & 0x01) | ((newValue >> 3) & 0x02);
+		}
+		xorValue = newValue;
+	}
+	return xorValue;
+}
+
+
+
+

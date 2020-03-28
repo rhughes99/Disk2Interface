@@ -15,7 +15,7 @@
 	Memory Locations shared with Controller:
 		Track number	0x300
 
-	03/23/2020
+	03/28/2020
 */
 #include <stdint.h>
 #include <pru_cfg.h>
@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 
 	lastPhaseIn = 0x1F;				// to force a "new" phase report
-	track = 3;
+	track = 3;						// arbitrary
 	phaseTrk = 0;
 	cogLocation = 0;
 
@@ -56,23 +56,20 @@ int main(int argc, char *argv[])
 
 	while (1)
 	{
-//		while ((__R31 & ENABLE) == ENABLE)	// wait for Enable to go low
-//			__delay_cycles(200000);			// 1 ms
-
 		if ((__R31 & ENABLE) == 0)					// drive is enabled
 		{
 			newPhase1 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);	// sample phase inputs
 
 			// Wait and then sample again to avoid reacting to short glitches on P0
-			__delay_cycles(200000);				// 1 ms
+			__delay_cycles(200000);					// 1 ms
 
 			newPhase2 = __R31 & (PHASE0 | PHASE1 | PHASE2 | PHASE3);
 
-			if (newPhase1 == newPhase2)			// consider phase valid
+			if (newPhase1 == newPhase2)				// consider phase valid
 			{
-				if (lastPhaseIn != newPhase1)	// any change?
+				if (lastPhaseIn != newPhase1)		// any change?
 				{
-					lastPhaseIn = newPhase1;	//update lastPhaseIn
+					lastPhaseIn = newPhase1;		//update lastPhaseIn
 
 					cogLocation = 1 << (phaseTrk % 4);
 
@@ -92,10 +89,10 @@ int main(int argc, char *argv[])
 						if (track != (phaseTrk>>1))
 							track = phaseTrk >> 1;
 					}
-					PRU0_RAM[TRK_NUM_ADR] = track;		// update track for Controller
+					PRU0_RAM[TRK_NUM_ADR] = track;	// update track for Controller
 				}
 			}
 		}
-		__delay_cycles(200000);			// 1 ms
+		__delay_cycles(200000);						// 1 ms
 	}
 }
