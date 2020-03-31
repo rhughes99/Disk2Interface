@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/28/2020
+	03/31/2020
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,56 +74,81 @@ const unsigned int SECTOR_DATA_OFFSET = 26;				// location of first data byte, 0
 // First image is loaded at startup
 const char *theImages[] =
 {
-	"Startup/BasicStartup.po",				// ProDOS 2.0.3
+	"Startup/BasicStartup.po",					// ProDOS 2.0.3
 //	"Startup/Working.po",
-	"Startup/MerlinWorking.po",
+//	"Startup/MerlinWorking.po",
 //	"Startup/SavedStart.po",					// saved combo of all below
 //	"Startup/SystemData.po",					// SavedStart + some source files
-//	"Startup/MySystem.po",					// ProDOS 2.0.3
-//	"Startup/MerlinDisk1.dsk",				// ProDOS 1.1.1, MERLIN.SYSTEM
-	"Startup/SmartApples.po",					// Smart Apples BASIC programs
+//	"Startup/MySystem.po",						// ProDOS 2.0.3
+//	"Startup/MerlinDisk1.dsk",					// ProDOS 1.1.1, MERLIN.SYSTEM
+//	"Startup/SmartApples.po",					// Smart Apples BASIC programs
+
+//	"MyDisks/ADTPro.po",
+//	"MyDisks/AE_RGB.po",
+//	"MyDisks/ApplesoftSource.po",
+	"MyDisks/AssemblyLinesTheDisk.po",
+	"MyDisks/BB_BeagleCompiler.po",
+	"MyDisks/BB_DCode.po",
+	"MyDisks/BB_GPLE.po",
+	"MyDisks/BB_ProgramWriter.po",
+	"MyDisks/Copy2Plus.po",
+	"MyDisks/MerlinPro.po",
+	"MyDisks/ProDOS_Exerciser.po",
+	"MyDisks/ProgrammingExamples.po",
+	"MyDisks/RAMWorksTest.po",
+	"MyDisks/SCSI_Utilities.po",
+	"MyDisks/SerialBd.po",
+	"MyDisks/TalkIsCheap.po",
+	"MyDisks/TimeMaster2HO.po",
+	"MyDisks/USB_Test.po",
+	"MyDisks/UsersDisk.po",
+	"MyDisks/VernierChaos1.po",
+	"MyDisks/VernierChaos2.po",
+	"MyDisks/ZipChipII.po",
 
 //	"Utilities/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
-	"Utilities/Apple_DOS33.dsk",				// DOS 3.3
-	"Utilities/BagOfTricksII.dsk",				// ProDOS 1.1.1
-	"Utilities/BeagleCompiler22.dsk",			// ProDOS 1.2
+//	"Utilities/Apple_DOS33.dsk",				// DOS 3.3
+//	"Utilities/BagOfTricksII.dsk",				// ProDOS 1.1.1
+//	"Utilities/BeagleCompiler22.dsk",			// ProDOS 1.2
 //	"Utilities/Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
-	"Utilities/DCode.dsk",						// ProDOS 1.1.1
-	"Utilities/Diagnostics_IIe.dsk",
+//	"Utilities/DCode.dsk",						// ProDOS 1.1.1
+//	"Utilities/Diagnostics_IIe.dsk",
 //	"Utilities/GPLE.dsk",						// ProDOS 1.0.1
-	"Utilities/MerlinDisk2.dsk",
+//	"Utilities/MerlinDisk2.dsk",
 //	"Utilities/PDShrinkIts.dsk",				// ?
-	"Utilities/ProByter.po",					// ProDOS 1.1.1
-	"Utilities/ProgramWriter.dsk",				// ProDOS 1.1.1
+//	"Utilities/ProByter.po",					// ProDOS 1.1.1
+//	"Utilities/ProgramWriter.dsk",				// ProDOS 1.1.1
 //	"Utilities/ScsiUtilities.po",				// ProDOS 1.8
 //	"Utilities/Timemaster2HO.dsk",				// ProDOS 1.4, SET.CLOCK
 //	"Utilities/ZipChipUtilities.dsk",			// ?
 
-	"GamesSims/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
-	"GamesSims/Apple_Classics_Side_1.dsk",		// DOS 3.3
-	"GamesSims/Apple_Classics_Side_2.dsk",		// DOS 3.3
-	"GamesSims/Aquarium.dsk",					// DOS 3.3
-	"GamesSims/castle_wolfenstein_fixed.dsk",	// ?
-	"GamesSims/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
-	"GamesSims/castle_wolfenstein.dsk",
-	"GamesSims/CastleWolfenstein.dsk",
-	"GamesSims/Dinosaurs.dsk",					// DOS 3.3
-	"GamesSims/Flight_Sim_II.dsk",				// Boot only
-	"GamesSims/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
-	"GamesSims/FormulaNibble.dsk",
-	"GamesSims/FS2.dsk",						// Boot only, same as Flight_Sim_ II
-	"GamesSims/HighSeas_S1.dsk",				// ProDOS
-	"GamesSims/HighSeas_S2.dsk",				// Data only
-	"GamesSims/OSilver.dsk",
-	"GamesSims/SilentService.dsk",
-	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
+//	"GamesSims/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
+//	"GamesSims/Apple_Classics_Side_1.dsk",		// DOS 3.3
+//	"GamesSims/Apple_Classics_Side_2.dsk",		// DOS 3.3
+//	"GamesSims/Aquarium.dsk",					// DOS 3.3
+//	"GamesSims/castle_wolfenstein_fixed.dsk",	// ?
+//	"GamesSims/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
+//	"GamesSims/castle_wolfenstein.dsk",
+//	"GamesSims/CastleWolfenstein.dsk",
+//	"GamesSims/Dinosaurs.dsk",					// DOS 3.3
+//	"GamesSims/Flight_Sim_II.dsk",				// Boot only
+//	"GamesSims/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
+//	"GamesSims/FormulaNibble.dsk",
+//	"GamesSims/FS2.dsk",						// Boot only, same as Flight_Sim_ II
+//	"GamesSims/HighSeas_S1.dsk",				// ProDOS
+//	"GamesSims/HighSeas_S2.dsk",				// Data only
+//	"GamesSims/OSilver.dsk",
+//	"GamesSims/SilentService.dsk",
+//	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
 
-	"HoldingPen/ChessMaster2000b.dsk",
-	"HoldingPen/Minesweeper.dsk",
-	"HoldingPen/Monopoly.dsk",
-	"HoldingPen/RISK.dsk",
-	"HoldingPen/sorry_s1.dsk",
-	"HoldingPen/sorry_s2.dsk",
+//	"HoldingPen/ChessMaster2000b.dsk",
+//	"HoldingPen/Minesweeper.dsk",
+//	"HoldingPen/Monopoly.dsk",
+//	"HoldingPen/RISK.dsk",
+//	"HoldingPen/sorry_s1.dsk",
+//	"HoldingPen/sorry_s2.dsk",
+
+	"BLANK.po"
 };
 
 unsigned char theImage[35][16][374];			// [NUM_TRACKS][NUM_SECTORS_PER_TRACK][SMALL_NIBBLE_SIZE]
@@ -328,7 +353,9 @@ void changeImage(int sig)
 
 	printf("Save loaded image? Enter name (???.po or ???.dsk) or <CR>: ");
 	fgets(saveName, 32, stdin);
-	length = strlen(saveName) - 1;		// points to last char in saveName
+	fgets(saveName, 32, stdin);		// do it again since can't flush stdin???
+
+	length = strlen(saveName) - 1;	// points to last char in saveName
 	if (saveName[length] == '\n')
 		saveName[length] = '\0';
 
@@ -337,7 +364,7 @@ void changeImage(int sig)
 
 	printf("\nSelect image to load (99 to keep current): ");
 	scanf("%d", &selection);
-	if (selection == 99)
+	if (selection > numImages-1)
 	{
 		printf("Current image: %s\n", loadedImageName);
 		return;
