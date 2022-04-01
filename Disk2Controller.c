@@ -2,7 +2,7 @@
 	Apple Disk II Interface Controller
 	PRU0 handles phase signals to determine track
 	PRU1 handles sending and receiving data on a sector-by-sector basis
-	03/31/2020
+	04/2022
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -86,25 +86,25 @@ const char *theImages[] =
 //	"MyDisks/ADTPro.po",
 //	"MyDisks/AE_RGB.po",
 //	"MyDisks/ApplesoftSource.po",
-	"MyDisks/AssemblyLinesTheDisk.po",
-	"MyDisks/BB_BeagleCompiler.po",
-	"MyDisks/BB_DCode.po",
-	"MyDisks/BB_GPLE.po",
-	"MyDisks/BB_ProgramWriter.po",
-	"MyDisks/Copy2Plus.po",
-	"MyDisks/MerlinPro.po",
-	"MyDisks/ProDOS_Exerciser.po",
-	"MyDisks/ProgrammingExamples.po",
-	"MyDisks/RAMWorksTest.po",
-	"MyDisks/SCSI_Utilities.po",
-	"MyDisks/SerialBd.po",
-	"MyDisks/TalkIsCheap.po",
-	"MyDisks/TimeMaster2HO.po",
-	"MyDisks/USB_Test.po",
-	"MyDisks/UsersDisk.po",
-	"MyDisks/VernierChaos1.po",
-	"MyDisks/VernierChaos2.po",
-	"MyDisks/ZipChipII.po",
+//	"MyDisks/AssemblyLinesTheDisk.po",
+//	"MyDisks/BB_BeagleCompiler.po",
+//	"MyDisks/BB_DCode.po",
+//	"MyDisks/BB_GPLE.po",
+//	"MyDisks/BB_ProgramWriter.po",
+//	"MyDisks/Copy2Plus.po",
+//	"MyDisks/MerlinPro.po",
+//	"MyDisks/ProDOS_Exerciser.po",
+//	"MyDisks/ProgrammingExamples.po",
+//	"MyDisks/RAMWorksTest.po",
+//	"MyDisks/SCSI_Utilities.po",
+//	"MyDisks/SerialBd.po",
+//	"MyDisks/TalkIsCheap.po",
+//	"MyDisks/TimeMaster2HO.po",
+//	"MyDisks/USB_Test.po",
+//	"MyDisks/UsersDisk.po",
+//	"MyDisks/VernierChaos1.po",
+//	"MyDisks/VernierChaos2.po",
+//	"MyDisks/ZipChipII.po",
 
 //	"Utilities/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
 //	"Utilities/Apple_DOS33.dsk",				// DOS 3.3
@@ -142,11 +142,19 @@ const char *theImages[] =
 //	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
 
 //	"HoldingPen/ChessMaster2000b.dsk",
-//	"HoldingPen/Minesweeper.dsk",
+//	"HoldingPen/Minesweeper.dsk",               // ProDOS
 //	"HoldingPen/Monopoly.dsk",
 //	"HoldingPen/RISK.dsk",
 //	"HoldingPen/sorry_s1.dsk",
 //	"HoldingPen/sorry_s2.dsk",
+    "HoldingPen/Agent USA.dsk",
+    "HoldingPen/Alice1.dsk",
+    "HoldingPen/Alice2.dsk",
+    "HoldingPen/Alicesv.dsk",
+    "HoldingPen/Alphabet Zoo.dsk",
+    "HoldingPen/AnimalWatchWhales.dsk",
+    "HoldingPen/BillysSillyThings33A.DSK",
+    "HoldingPen/BillysSillyThings33B.DSK",
 
 	"BLANK.po"
 };
