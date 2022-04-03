@@ -141,25 +141,35 @@ const char *theImages[] =
 //	"GamesSims/SilentService.dsk",
 //	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
 
-//	"HoldingPen/ChessMaster2000b.dsk",
-//	"HoldingPen/Minesweeper.dsk",               // ProDOS
-//	"HoldingPen/Monopoly.dsk",
-//	"HoldingPen/RISK.dsk",
-//	"HoldingPen/sorry_s1.dsk",
-//	"HoldingPen/sorry_s2.dsk",
-    "HoldingPen/Agent USA.dsk",
+    "HoldingPen/Agent_USA.dsk",
     "HoldingPen/Alice1.dsk",
     "HoldingPen/Alice2.dsk",
     "HoldingPen/Alicesv.dsk",
-    "HoldingPen/Alphabet Zoo.dsk",
+    "HoldingPen/Alphabet_Zoo.dsk",
+    "HoldingPen/AnAppleForTheTeacher-S1.dsk",
+    "HoldingPen/AnAppleForTheTeacher-S2.dsk",
     "HoldingPen/AnimalWatchWhales.dsk",
+    "HoldingPen/Astro-Grover.dsk",
+    "HoldingPen/Baronssat.dsk",
     "HoldingPen/BillysSillyThings33A.DSK",
     "HoldingPen/BillysSillyThings33B.DSK",
+    "HoldingPen/Camps.dsk",
+    "HoldingPen/Characteristics_of_Light.dsk",
+    "HoldingPen/Conceptor-S1.dsk",
+    "HoldingPen/Conceptor-S2.dsk",
+    "HoldingPen/Create_With_Garfield1.dsk",
+    "HoldingPen/Create_With_Garfield2.dsk",
+    "HoldingPen/DDPG1.DSK",
+    "HoldingPen/DDPG2.DSK",
+//	"HoldingPen/Minesweeper.dsk",               // ProDOS
+//	"HoldingPen/sorry_s1.dsk",
+//	"HoldingPen/sorry_s2.dsk",
 
 	"BLANK.po"
 };
 
-unsigned char theImage[35][16][374];			// [NUM_TRACKS][NUM_SECTORS_PER_TRACK][SMALL_NIBBLE_SIZE]
+//				[NUM_TRACKS][NUM_SECTORS_PER_TRACK][SMALL_NIBBLE_SIZE]
+unsigned char theImage[35][16][374];
 unsigned char loadedImageName[64];
 
 //____________________
@@ -216,17 +226,17 @@ int main(int argc, char *argv[])
 	pru1WriteDataPtr	= pru1RAMptr + WRITE_DATA_ADR;
 
 	// Load disk image (into theImage and PRU 1)
-	loadDiskImage(theImages[0]);							// first image in list
+	loadDiskImage(theImages[0]);					// first image in list
 
 	// Set up untranslate6 table
-	for (i=0; i<NUM_BYTES_PER_SECTOR; i++)					// fill with FFs to detect when we are out of range
+	for (i=0; i<NUM_BYTES_PER_SECTOR; i++)			// fill with FFs to detect when we are out of range
 		untranslate6[i] = 0xFF;
 
-	for (i=0; i<0x40; i++)									// inverse of translate6 table
+	for (i=0; i<0x40; i++)							// inverse of translate6 table
 		untranslate6[translate6[i]] = i;
 
-	(void) signal(SIGINT,  myShutdown);						// ^c = graceful shutdown
-	(void) signal(SIGTSTP, changeImage);					// ^z = cycle through images
+	(void) signal(SIGINT,  myShutdown);				// ^c = graceful shutdown
+	(void) signal(SIGTSTP, changeImage);			// ^z = cycle through images
 
 	printf("\n--- Disk II IF running\n");
 	printf("====================\n");
@@ -243,9 +253,9 @@ int main(int argc, char *argv[])
 
 		// OK because PRU0 only updates track when drive enabled
 		track = *pru0TrackPtr;
-		if (track != loadedTrk)						// has A2 moved disk head?
+		if (track != loadedTrk)					// has A2 moved disk head?
 		{
-			*pru1InterruptPtr = 1;					// pause sending while changing track
+			*pru1InterruptPtr = 1;				// pause sending while changing track
 
 			// Copy new track to PRU
 			for (sector=0; sector<NUM_SECTORS_PER_TRACK; sector++)
@@ -254,14 +264,14 @@ int main(int argc, char *argv[])
 				for (i=0; i<SMALL_NIBBLE_SIZE; i++)
 					*(pru1TrackDataPtr + offset + i) = theImage[track][sector][i];
 			}
-			*pru1InterruptPtr = 0;					// turn sending back on
+			*pru1InterruptPtr = 0;				// turn sending back on
 
 			loadedTrk = track;
-			trkCnt++;								// for display
 			if (VERBOSE)
 			{
 				printf("%d\t", loadedTrk);
 //				printf("0x%X\t", loadedTrk);
+				trkCnt++;						// for display
 				if (trkCnt % 8 == 0)
 					printf("\n");
 			}
@@ -725,4 +735,3 @@ unsigned char computeDataChecksum(unsigned char *nibble)
 	}
 	return xorValue;
 }
-
