@@ -383,25 +383,28 @@ void changeImage(int sig)
 	}
 	printf("\n========== ========== ========== ========== ========== ==========\n");
 
-	printf("Save loaded image? Enter name (???.po or ???.dsk) or <CR>: ");
-	fgets(saveName, 32, stdin);
-	fgets(saveName, 32, stdin);		// do it again since can't flush stdin???
+//	printf("Save loaded image? Enter name (???.po or ???.dsk) or <CR>: ");
+//	fgets(saveName, 32, stdin);
+//	fgets(saveName, 32, stdin);		// do it again since can't flush stdin???
 
-	length = strlen(saveName) - 1;	// points to last char in saveName
-	if (saveName[length] == '\n')
-		saveName[length] = '\0';
+//	length = strlen(saveName) - 1;	// points to last char in saveName
+//	if (saveName[length] == '\n')
+//		saveName[length] = '\0';
 
-	if (length > 5)
-		saveDiskImage(saveName);
+//	if (length > 5)
+//		saveDiskImage(saveName);
 
-	printf("\nSelect image to load (99 to keep current): ");
+	printf("Select image to load: ");
 	scanf("%d", &selection);
-	if (selection > numImages-1)
-	{
-		printf("Current image: %s\n", loadedImageName);
-		return;
-	}
-	loadDiskImage(theImages[selection]);
+//	if (selection > numImages-1)
+//	{
+//		printf("Current image: %s\n", loadedImageName);
+//		return;
+//	}
+    if (selection < numImages)
+	    loadDiskImage(theImages[selection]);
+    else
+        printf("*** Bad image number\n");
 }
 
 //____________________
