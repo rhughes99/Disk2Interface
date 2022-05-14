@@ -75,127 +75,42 @@ const unsigned int SECTOR_DATA_OFFSET = 26;				// location of first data byte, 0
 const char *theImages[] =
 {
 	"Startup/BasicStartup.po",					// ProDOS 2.0.3
-//	"Startup/Working.po",
-//	"Startup/MerlinWorking.po",
-//	"Startup/SavedStart.po",					// saved combo of all below
-//	"Startup/SystemData.po",					// SavedStart + some source files
-//	"Startup/MySystem.po",						// ProDOS 2.0.3
-//	"Startup/MerlinDisk1.dsk",					// ProDOS 1.1.1, MERLIN.SYSTEM
-//	"Startup/SmartApples.po",					// Smart Apples BASIC programs
 
-//	"MyDisks/ADTPro.po",
-//	"MyDisks/AE_RGB.po",
-//	"MyDisks/ApplesoftSource.po",
-//	"MyDisks/AssemblyLinesTheDisk.po",
-//	"MyDisks/BB_BeagleCompiler.po",
-//	"MyDisks/BB_DCode.po",
-//	"MyDisks/BB_GPLE.po",
-//	"MyDisks/BB_ProgramWriter.po",
-//	"MyDisks/Copy2Plus.po",
-//	"MyDisks/MerlinPro.po",
-//	"MyDisks/ProDOS_Exerciser.po",
-//	"MyDisks/ProgrammingExamples.po",
-//	"MyDisks/RAMWorksTest.po",
-//	"MyDisks/SCSI_Utilities.po",
-//	"MyDisks/SerialBd.po",
-//	"MyDisks/TalkIsCheap.po",
-//	"MyDisks/TimeMaster2HO.po",
-//	"MyDisks/USB_Test.po",
-//	"MyDisks/UsersDisk.po",
-//	"MyDisks/VernierChaos1.po",
-//	"MyDisks/VernierChaos2.po",
-//	"MyDisks/ZipChipII.po",
+	"Games/Action/ABM.dsk",
+	"Games/Action/AcidTrip.dsk",
+	"Games/Action/AE_Back.dsk",
+	"Games/Action/AE_Front.dsk",
+	"Games/Action/ae1.dsk",
+	"Games/Action/ae2.dsk",
+	"Games/Action/Aeronaut.dsk",
+	"Games/Action/Airheart.dsk",
+	"Games/Action/Alcazar.dsk",
+	"Games/Action/Alf.dsk",
+	"Games/Action/AlienPlus.dsk",
+	"Games/Action/AlienRain.dsk",
+	"Games/Action/ALIENS1.dsk",
+	"Games/Action/ALIENS2.dsk",
+	"Games/Action/AntiISDA_Warrior.dsk",
+	"Games/Action/Aplcidsp.dsk",
+	"Games/Action/AppleBowling.dsk",
+	"Games/Action/ApplePanic_Joystick.dsk",
+	"Games/Action/ApplePanic.dsk",
+	"Games/Action/ApplePanicPlus.dsk",
+	"Games/Action/ArcaseBootCamp.dsk",
+	"Games/Action/ArcadeInsanity.dsk",
+	"Games/Action/ArticFox.dsk",
+	"Games/Action/ArdyTheAardvark.dsk",
+	"Games/Action/Argos.dsk",
+	"Games/Action/Arkanoi2.dsk",
+	"Games/Action/arkanoid.dsk",
+	"Games/Action/arkedit.dsk",
+	"Games/Action/Artesians.dsk",
+	"Games/Action/Asteroid.dsk",
+	"Games/Action/Asteroids_nm_h5.dsk",
+	"Games/Action/Aztec.dsk",
+	"Games/Action/Aztec_alt.dsk",
+	"Games/Action/Aztec.dsk",
 
-//	"Utilities/AEDesktopExpProDrive.dsk",		// ProDOS 1.1.1, PRODRIVE
-//	"Utilities/Apple_DOS33.dsk",				// DOS 3.3
-//	"Utilities/BagOfTricksII.dsk",				// ProDOS 1.1.1
-//	"Utilities/BeagleCompiler22.dsk",			// ProDOS 1.2
-//	"Utilities/Copy2Plus74.dsk",				// ProDOS 1.2, UTIL.SYSTEM
-//	"Utilities/DCode.dsk",						// ProDOS 1.1.1
-//	"Utilities/Diagnostics_IIe.dsk",
-//	"Utilities/GPLE.dsk",						// ProDOS 1.0.1
-//	"Utilities/MerlinDisk2.dsk",
-//	"Utilities/PDShrinkIts.dsk",				// ?
-//	"Utilities/ProByter.po",					// ProDOS 1.1.1
-//	"Utilities/ProgramWriter.dsk",				// ProDOS 1.1.1
-//	"Utilities/ScsiUtilities.po",				// ProDOS 1.8
-//	"Utilities/Timemaster2HO.dsk",				// ProDOS 1.4, SET.CLOCK
-//	"Utilities/ZipChipUtilities.dsk",			// ?
-
-//	"GamesSims/A2_FS1_Flight_Sim.dsk",			// DOS 3.3
-//	"GamesSims/Apple_Classics_Side_1.dsk",		// DOS 3.3
-//	"GamesSims/Apple_Classics_Side_2.dsk",		// DOS 3.3
-//	"GamesSims/Aquarium.dsk",					// DOS 3.3
-//	"GamesSims/castle_wolfenstein_fixed.dsk",	// ?
-//	"GamesSims/castle_wolfenstein_stos161.dsk",	// starts, quickly gets wacky
-//	"GamesSims/castle_wolfenstein.dsk",
-//	"GamesSims/CastleWolfenstein.dsk",
-//	"GamesSims/Dinosaurs.dsk",					// DOS 3.3
-//	"GamesSims/Flight_Sim_II.dsk",				// Boot only
-//	"GamesSims/FlightSimulator2.dsk",			// Boot only, same as Flight_Sim_ II
-//	"GamesSims/FormulaNibble.dsk",
-//	"GamesSims/FS2.dsk",						// Boot only, same as Flight_Sim_ II
-//	"GamesSims/HighSeas_S1.dsk",				// ProDOS
-//	"GamesSims/HighSeas_S2.dsk",				// Data only
-//	"GamesSims/OSilver.dsk",
-//	"GamesSims/SilentService.dsk",
-//	"GamesSims/Sudoku.dsk",						// ProDOS 1.8
-
-//    "Educational/Agent_USA.dsk",
-//    "Educational/Alice1.dsk",
-//    "Educational/Alice2.dsk",
-//    "Educational/Alicesv.dsk",
-//    "Educational/Alphabet_Zoo.dsk",
-//    "Educational/AnAppleForTheTeacher-S1.dsk",
-//    "Educational/AnAppleForTheTeacher-S2.dsk",
-//    "Educational/AnimalWatchWhales.dsk",
-//    "Educational/Aquarium.dsk",
-//    "Educational/Astro-Grover.dsk",
-//    "Educational/Baronssat.dsk",
-//    "Educational/BillysSillyThings33A.dsk",
-//    "Educational/BillysSillyThings33B.dsk",
-//    "Educational/Camps.dsk",
-//    "Educational/Characteristics_of_Light.dsk",
-//    "Educational/Conceptor-S1.dsk",
-//    "Educational/Conceptor-S2.dsk",
-//    "Educational/Create_With_Garfield1.dsk",
-//    "Educational/Create_With_Garfield2.dsk",
-//    "Educational/DDPG1.dsk",
-//    "Educational/DDPG2.dsk",
-//    "Educational/Dinosaurs.dsk",
-//    "Educational/Dr_seuss_Fix_Up_The_Mix_Puzzler.dsk",
-//    "Educational/Dragon_Blaster.dsk",
-//    "Educational/Early_Games.dsk",
-//    "Educational/fuzzywomp.dsk",
-//    "Educational/garfield_double_dares.dsk",
-//    "Educational/garfield_eat_your_words.dsk",
-//    "Educational/gears.dsk",
-//    "Educational/greatrace.dsk",
-//    "Educational/HinkyPinkyGame-S1.dsk",
-//    "Educational/HinkyPinkyGame-S2.dsk",
-//    "Educational/Math_Skill_Builders.dsk",
-//    "Educational/Pyramid_of_Terror.dsk",
-    "Educational/GeometricalShapes.dsk",
-    "Educational/InSearchOfTheMostAmazingThing.dsk",
-    "Educational/IntegerEducation.dsk",
-    "Educational/JoshiasReadingMachine.dsk",
-    "Educational/JungleBook1.dsk",
-    "Educational/JungleBook2.dsk",
-    "Educational/LabQuest1.dsk",
-    "Educational/LabQuest2.dsk",
-    "Educational/LazerMaze.dsk",
-    "Educational/LogicalShapes1.dsk",				// Little Running Steps
-    "Educational/LogicalShapes2.dsk",				// Little Running Steps
-    "Educational/MagicSpells.dsk",
-    "Educational/MathDrills.dsk",
-    "Educational/MatheMagic.dsk",
-    "Educational/MindMirror.dsk",
-    "Educational/MixedUpMotherGooseDisk1Back.dsk",
-    "Educational/MixedUpMotherGooseDisk1Front.dsk",
-    "Educational/MixedUpMotherGooseDisk2Back.dsk",
-    "Educational/MixedUpMotherGooseDisk2Front.dsk",
-    "Educational/MuppetDiscoveryDisk.dsk",
-    "Educational/WhatTimeIsIt.dsk",					// Little Running Steps
 
 	"BLANK.po"
 };
